@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="Temukan pilihan apartemen dijual dan disewa dengan foto, harga, dan spesifikasi unit lengkap di Habita Apartment Listing.">
+<meta name="robots" content="index, follow">
+<title>Habita — Apartment Listings</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="ui-enhancements.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brandmark">H</span> habita<span style="color:var(--blue)">.</span></div>
+  <nav class="nav"><button class="plain" id="navListings" onclick="showPublic(true)">Lihat Listing</button><button class="primary" id="navAdmin" onclick="openAdmin()">Admin Panel ↗</button></nav>
+</header>
+<section class="hero" id="hero">
+ <div class="hero-inner">
+  <div class="eyebrow"><span class="eyebrow-dot"></span> Temukan ruang untuk cerita baru</div>
+  <h1>Temukan apartemen yang terasa seperti <span>rumah.</span></h1>
+  <p>Jelajahi pilihan unit apartemen dengan informasi lengkap, spesifikasi, dan foto dalam satu tempat.</p>
+  <div class="hero-points"><span>✓ Listing pilihan</span><span>✓ Info transparan</span><span>✓ Jual &amp; sewa</span></div>
+  <div class="searchbar">
+   <label class="search-input-wrap"><span aria-hidden="true">⌕</span><input id="searchInput" aria-label="Cari apartemen" placeholder="Cari nama apartemen atau lokasi..." oninput="renderListings()"></label>
+   <select id="transactionFilter" aria-label="Filter jual atau sewa" onchange="renderListings()"><option value="">Jual &amp; Sewa</option><option value="Jual">Jual</option><option value="Sewa">Sewa</option></select>
+   <select id="typeFilter" aria-label="Filter tipe unit" onchange="renderListings()"><option value="">Semua tipe unit</option><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>4 Bedroom</option></select>
+   <button class="primary" onclick="searchListings()"><span aria-hidden="true">⌕</span> Cari Properti</button>
+  </div>
+ </div>
+</section>
+<main class="container" id="publicPage">
+ <div class="sectionhead"><div><div class="section-kicker">KURASI HABITA</div><h2 id="listingsHeading">Temukan tempat berikutnya</h2><p>Pilihan apartemen untuk dijual dan disewa.</p></div><div class="count" id="listingCount"></div></div>
+  <p id="connectionNotice" class="hint" role="status" style="margin:0 0 16px"></p>
+  <div class="grid" id="listingGrid"></div>
+</main>
+<main class="adminwrap" id="adminPage" style="display:none">
+ <div class="adminbar"><div><h2>Manajemen Listing</h2><p>Kelola informasi dan foto unit apartemen Anda.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline btn" onclick="logoutAdmin()">Keluar</button><button class="primary btn" onclick="openForm()">＋ Tambah Unit</button></div></div>
+ <div class="stats"><div class="stat"><small>Total unit</small><strong id="totalStat">0</strong></div><div class="stat"><small>Available</small><strong id="availableStat">0</strong></div><div class="stat"><small>Sold / Rented</small><strong id="soldStat">0</strong></div></div>
+ <div class="tablewrap"><table><thead><tr><th>Unit</th><th>Tipe</th><th>Transaksi</th><th>Luas</th><th>Harga</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="adminRows"></tbody></table></div>
+ <p id="adminNotice" class="hint" style="margin-top:13px" role="status"></p>
+</main>
+<footer>© <span id="year"></span> Habita. Apartment Listing — Informasi unit dapat berubah sewaktu-waktu.</footer>
+
+<div class="modalback" id="loginModal"><div class="modal" style="max-width:400px"><div class="modalhead"><h3>Admin Login</h3><button class="close" onclick="closeModal('loginModal')">×</button></div><div class="modalcontent"><p style="font-size:13px;color:var(--muted);margin-top:0">Masuk dengan akun admin Supabase.</p><form onsubmit="login(event)"><div class="field"><label>Email admin</label><input type="email" id="adminEmail" required autocomplete="username" placeholder="admin@email.com"></div><div class="field" style="margin-top:14px"><label>Password</label><input type="password" id="adminPassword" required autocomplete="current-password" placeholder="Masukkan password"></div><div class="modalactions"><button type="submit" class="primary btn">Masuk</button></div></form><p class="hint">Buat akun admin melalui Supabase Dashboard. Pendaftaran publik sebaiknya dinonaktifkan.</p></div></div></div>
+
+<div class="modalback" id="formModal"><div class="modal"><div class="modalhead"><h3 id="formTitle">Tambah Unit</h3><button class="close" onclick="closeModal('formModal')">×</button></div><div class="modalcontent">
+<form id="unitForm" onsubmit="saveUnit(event)"><input type="hidden" id="editId"><div class="formgrid">
+ <div class="field"><label>Nama apartemen *</label><input id="name" required placeholder="Contoh: The Residence"></div>
+ <div class="field"><label>Nomor / nama unit *</label><input id="unit" required placeholder="Contoh: Tower A - 1205"></div>
+ <div class="field"><label>Tipe unit *</label><select id="type" required><option value="">Pilih tipe</option><option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option><option>4 Bedroom</option></select></div>
+ <div class="field"><label>Pilihan transaksi *</label><select id="transactionType" required onchange="updateTransactionFields()"><option value="Jual">Jual</option><option value="Sewa">Sewa</option></select></div>
+ <div class="field" id="rentPeriodField" style="display:none"><label>Periode harga sewa *</label><select id="rentPeriod"><option value="month">Per bulan</option><option value="year">Per tahun</option></select></div>
+ <div class="field"><label>Luas unit (m²) *</label><input id="area" type="number" min="1" required placeholder="65"></div>
+ <div class="field"><label>Jumlah kamar tidur</label><input id="bedrooms" type="number" min="0" placeholder="2"></div>
+ <div class="field"><label>Jumlah kamar mandi</label><input id="bathrooms" type="number" min="0" placeholder="1"></div>
+ <div class="field"><label>Lantai</label><input id="floor" placeholder="12"></div>
+ <div class="field"><label>Kondisi / furnitur</label><select id="furnishing"><option>Fully Furnished</option><option>Semi Furnished</option><option>Unfurnished</option></select></div>
+ <div class="field"><label id="priceLabel">Harga jual (Rp) *</label><input id="price" type="number" min="0" required placeholder="1250000000"></div>
+ <div class="field"><label>Status unit</label><select id="status"><option>Available</option><option>Sold</option></select></div>
+ <div class="field"><label>Lokasi / alamat singkat</label><input id="location" placeholder="Contoh: Jakarta Selatan"></div>
+ <div class="field"><label>Sertifikat</label><input id="certificate" placeholder="SHMSRS / PPJB / lainnya"></div>
+ <div class="field full"><label>Deskripsi unit</label><textarea id="description" placeholder="Jelaskan keunggulan, fasilitas, view, akses, dan informasi lainnya..."></textarea></div>
+ <div class="field full"><label>Foto unit</label><div class="uploadbox"><input id="photos" type="file" accept="image/*" multiple><div class="hint">Pilih beberapa foto. Format gambar umum; ukuran maksimal 2,5 MB per foto.</div><div class="preview" id="photoPreview"></div></div></div>
+</div><div class="modalactions"><button type="button" class="btn outline" onclick="closeModal('formModal')">Batal</button><button type="submit" class="btn primary">Simpan Unit</button></div></form>
+</div></div></div>
+
+<div class="modalback" id="detailModal"><div class="modal"><div class="modalhead"><h3>Detail Apartemen</h3><button class="close" onclick="closeModal('detailModal')">×</button></div><div id="detailContent"></div></div></div>
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="app.js" defer></script>
+</body>
+</html>
